@@ -1,6 +1,6 @@
 {
 	"id": "grotto-deadline-scheduler",
-	"name": "Grotto Deadline Countdown",
+	"name": "Deadline Countdown",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Controls for scheduling deadlines",
