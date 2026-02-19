@@ -1,2 +1,3 @@
-# Deadline-Countdown
-A plugin for obsidian to manage deadlines
+# Introduction
+
+Tell me. Do you fear deadlines? Do they creep up on you without any notice? One moment you are enjoying life, smelling the roses, having a nice meal, getting a high score on your PS5, and then you turn around and ... they're just standing there, staring at you, waiting for you to acknowledge them. That dreadful, piercing stare, sending shivers down your spine as they remind you of your duties long forgotten. "Your homework is due tomorrow," one of them reminds you. "Did you finish writing the draft your professor asked for this weekend?" another whispers into your ear. *How did this one get so close?* 
