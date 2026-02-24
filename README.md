@@ -23,7 +23,7 @@ The deadlines can be viewed from the sidebar. There is a button at the top to re
 
 If a deadline repeats, the interval for repeating will be displayed. Once the deadline is reached, the date of the deadline will update to the next possible time and will start counting down again. If a deadline does not repeat, when the time is over, the message "Deadline passed" will display in place of the timer. 
 
-When a deadline is approaching, as in, when it is within 1 hour of ending or resetting, that specific deadline will appear inside a red box as a warning. Currently, there is no way to adjust when this warning begins. I will improve this later.
+When a deadline is approaching, as in, when it is within 1 hour of ending or resetting, it will appear inside a red box as a warning. Currently, there is no way to adjust when this warning begins. I will improve this later.
 
 ![Sidebar1](https://github.com/user-attachments/assets/82ad74a6-e8d1-4748-9d57-b957be84d40c)
 
