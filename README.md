@@ -30,7 +30,7 @@ When a deadline is approaching, as in, when it is within 1 hour of ending or res
 # Command Palette
 There is a command to open the sidebar view. It is only available if the sidebar view has been closed. 
 
-![Sidebar2](https://github.com/user-attachments/assets/705e96d2-ff27-4ff4-af1a-ee0fa746bafb)
+![Sidebar2](https://github.com/user-attachments/assets/da30f0c0-e6d0-4f86-a0dd-12634a67dc3e)
 
 # Mobile Support
 
