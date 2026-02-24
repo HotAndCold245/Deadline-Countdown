@@ -1,6 +1,6 @@
 {
-	"id": "deadline-scheduler",
-	"name": "Deadline Scheduler",
+	"id": "deadline-countdown",
+	"name": "Deadline Countdown",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Set and manage deadlines",
