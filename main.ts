@@ -28,7 +28,7 @@ interface Deadline {
     title: string;
     dateTime: string;
     category: string;
-    recurrence?: number;
+    recurrence: number;
 }
 
 const DEFAULT_SETTINGS: CountdownSettings = {
@@ -40,7 +40,7 @@ const DEFAULT_SETTINGS: CountdownSettings = {
 };
 
 export default class CountdownPlugin extends Plugin {
-    settings: CountdownSettings;
+    settings: CountdownSettings = DEFAULT_SETTINGS;
     deadlines: Deadline[] = [];
     async onload(): Promise<void> {
         await this.loadSettings();
@@ -49,13 +49,31 @@ export default class CountdownPlugin extends Plugin {
             (leaf: WorkspaceLeaf) => new GrottoSidebarView(leaf, this)
         );
         addIcon('countdown-preset', '<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer-icon lucide-timer"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>');
-        this.activateView();
+        this.app.workspace.onLayoutReady(() => {
+            this.activateView();
+        });
         this.addSettingTab(new CountdownSettingsTab(this.app, this));
+        // Command Palette command to open the sidebar view if closed
+        this.addCommand({
+            id: "show-deadline-view",
+            name: "Open Deadline View",
+            checkCallback: (checking: boolean) => {
+                if (checking) {
+                    return (
+                        this.app.workspace.getLeavesOfType(TIMER_COUNT_VIEW).length === 0
+                    );
+                }
+                this.activateView();
+            },
+        });
     }
     async activateView() {
+        if (this.app.workspace.getLeavesOfType(TIMER_COUNT_VIEW).length) {
+            // Return if the view is already active
+            return;
+        }
         const leaf = this.app.workspace.getRightLeaf(false);
         if (!leaf) {
-            new Notice('No available right sidebar to activate the view.');
             return;
         }
         const activeView = leaf.view;
@@ -111,7 +129,7 @@ export class GrottoSidebarView extends ItemView {
         refreshButton.addEventListener("click", () => this.refreshSidebar());
         // In case there are no active deadlines
         if (!this.plugin.settings.deadlines || this.plugin.settings.deadlines.length === 0) {
-            container.createEl("p", { text: "No upcoming deadlines." });
+            container.createEl("p", { text: "No upcoming deadlines" });
             return;
         }
         // Deadlines
@@ -130,50 +148,61 @@ export class GrottoSidebarView extends ItemView {
             const deadlineList = categorySection.createEl('div', {
                 cls: 'grotto-deadline-categories'
             });
-            deadlines.forEach((deadline) => {
-                let deadlineItem = deadlineList.querySelector(`.grotto-deadline-item[data-id="${deadline.title}"]`);
-                if (!deadlineItem) {
-                    // Determine if the deadline is urgent (less than 1 hour away)
-                    const deadlineDate = new Date(deadline.dateTime);
-                    const now = new Date();
-                    const timeDifference = deadlineDate.getTime() - now.getTime();
-                    const isUrgent = timeDifference <= 60 * 60 * 1000;
-                    deadlineItem = deadlineList.createEl('div', {
-                        cls: 'grotto-deadline-item' + (isUrgent ? ' grotto-deadline-urgent' : ''),
+            deadlines.forEach((dl) => {
+                const dlEl = deadlineList.createEl('div', { cls: 'grotto-deadline-card' });
+                const cardContainer = dlEl.createEl('div', { cls: 'grotto-deadline-card-container' });
+                // Title
+                const titleEl = cardContainer.createEl('span', { text: dl.title, cls: 'grotto-deadline-title' });
+                titleEl.setText(dl.title);
+                // Deadline Date
+                const dateEl = cardContainer.createEl('div', { cls: 'grotto-deadline-date' });
+                const deadlineDate = new Date(dl.dateTime);
+                dateEl.createEl('span', {
+                    text: 'Deadline',
+                    cls: 'grotto-deadline-label'
+                });
+                dateEl.createEl('span', {
+                    text: ': ' + deadlineDate.toLocaleString('en-GB', {
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true,
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    cls: 'grotto-deadline-date-value'
+                });
+                // Interval
+                const intervalTimeEl = cardContainer.createEl('div', { cls: 'grotto-deadline-interval' });
+                if (dl.recurrence > 0) {
+                    intervalTimeEl.createEl('span', {
+                        text: 'Interval',
+                        cls: 'grotto-deadline-label'
                     });
-                    deadlineItem.setAttribute('data-id', deadline.title);
-                    // Deadline Title
-                    deadlineItem.createEl('span', {
-                        cls: 'grotto-deadline-title',
-                        text: deadline.title
+                    intervalTimeEl.createEl('span', {
+                        text: `: Every ${dl.recurrence} day${dl.recurrence > 1 ? 's' : ''}`,
+                        cls: 'grotto-deadline-interval-value'
                     });
-                    // Deadline Date
-                    const dateEl = deadlineItem.createEl('div', {
-                        cls: 'grotto-deadline-date',
-                    });
-                    dateEl.setText(
-                        deadlineDate.toLocaleString('en-GB', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                        })
-                    );
-                    // Remaining Time
-                    const remainingTimeEl = deadlineItem.createEl('div', {
-                        cls: 'grotto-deadline-remaining-time',
-                    });
-                    // Update the remaining time
-                    this.updateRemainingTime(deadline, remainingTimeEl);
                 }
+                // Determine if the deadline is urgent (less than 1 hour away)
+                const now = new Date();
+                const timeDifference = deadlineDate.getTime() - now.getTime();
+                const isUrgent = timeDifference <= 60 * 60 * 1000;
+                dlEl.removeClass('grotto-deadline-urgent');
+                if (isUrgent) {
+                    dlEl.addClass('grotto-deadline-urgent');
+                }
+                const remainingTimeEl = cardContainer.createEl('div', {
+                    cls: 'grotto-deadline-remaining'
+                });
+                this.updateRemainingTime(dl, remainingTimeEl);
             });
         }
     }
     refreshSidebar() {
         this.renderSidebar();
     }
+    
     groupDeadlinesByCategory(deadlines: Deadline[]) {
         return deadlines.reduce((groups, deadline) => {
             if (!groups[deadline.category]) {
@@ -185,32 +214,48 @@ export class GrottoSidebarView extends ItemView {
     }
     // Function to update the remaining time for each deadline
     updateRemainingTime(deadline: Deadline, remainingTimeEl: HTMLElement) {
-        const deadlineDate = new Date(deadline.dateTime);
-        const now = new Date();
-        const timeDifference = deadlineDate.getTime() - now.getTime();
-        const lessThanOneHour = timeDifference <= 60 * 60 * 1000;
-        if (lessThanOneHour) {
-            remainingTimeEl.classList.add('grotto-deadline-urgent');
-        } else {
-            remainingTimeEl.classList.remove('grotto-deadline-urgent');
-        }
-        if (timeDifference <= 0) {
-            if (deadline.recurrence && typeof deadline.recurrence === 'number' && deadline.recurrence > 0) {
-                const recurrenceInterval = deadline.recurrence;
-                deadlineDate.setDate(deadlineDate.getDate() + recurrenceInterval);
-                remainingTimeEl.setText(`Resets: ${this.formatRemainingTime(deadlineDate)}`);
-                return;
+        const remainingLabelEl = remainingTimeEl.createEl('span');
+        const remainingValueEl = remainingTimeEl.createEl('span', {
+            cls: 'grotto-deadline-time-value'
+        });
+        const update = () => {
+            const now = new Date();
+            const deadlineDate = new Date(deadline.dateTime);
+            const diff = deadlineDate.getTime() - now.getTime();
+            // Reset
+            remainingLabelEl.setText('');
+            remainingValueEl.setText('');
+            remainingLabelEl.removeClass('grotto-deadline-ends');
+            remainingLabelEl.removeClass('grotto-deadline-resets');
+            remainingLabelEl.removeClass('grotto-deadline-passed');
+            if (diff <= 0) {
+                if (deadline.recurrence && deadline.recurrence > 0) {
+                    const next = new Date(deadlineDate);
+                    next.setDate(next.getDate() + deadline.recurrence);
+                    deadline.dateTime = next.toISOString();
+                    remainingLabelEl.setText('Resets in');
+                    remainingLabelEl.addClass('grotto-deadline-resets');
+                    remainingValueEl.setText(': ' + this.formatRemainingTime(next));
+                } else {
+                    remainingLabelEl.setText('Deadline Passed');
+                    remainingLabelEl.addClass('grotto-deadline-passed');
+                }
             } else {
-                remainingTimeEl.setText('Deadline passed');
-                return;
+                if (deadline.recurrence && deadline.recurrence > 0) {
+                    remainingLabelEl.setText('Resets in');
+                    remainingLabelEl.addClass('grotto-deadline-resets');
+                    remainingValueEl.setText(': ' + this.formatRemainingTime(deadlineDate));
+                } else {
+                    remainingLabelEl.setText('Ends in');
+                    remainingLabelEl.addClass('grotto-deadline-ends');
+                    remainingValueEl.setText(': ' + this.formatRemainingTime(deadlineDate));
+                }
             }
-        }
-        if (deadline.recurrence && deadline.recurrence > 0) {
-            remainingTimeEl.setText(`Resets: ${this.formatRemainingTime(deadlineDate)}`);
-        } else {
-            remainingTimeEl.setText(`Ends: ${this.formatRemainingTime(deadlineDate)}`);
-        }
+            this.plugin.saveSettings();
+        };
+        update();
     }
+    
     formatRemainingTime(deadlineDate: Date) {
         const now = new Date();
         const timeDifference = deadlineDate.getTime() - now.getTime();
@@ -330,7 +375,7 @@ class CountdownSettingsTab extends PluginSettingTab {
                     .onClick(async () => {
                         const title = this.plugin.settings.deadlineTitle.trim();
                         const dateTime = this.plugin.settings.deadlineDateTime;
-                        const recurrence = this.plugin.settings.selectedRecurrenceValue;
+                        const recurrence = this.plugin.settings.selectedRecurrenceValue || 0;
                         // Determine final category
                         let finalCategory = (categoryInput || DEFAULT_CATEGORY).trim();
                         if (!this.plugin.settings.categories.includes(finalCategory)) {
@@ -412,118 +457,139 @@ class CountdownSettingsTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
                 this.display();
             });
+            // REMINDER: Update this view in the settings tab to be more elaborate after adding the edit function
+            // Currently, this is identical to the sidebar view
             categoryDeadlines.forEach(dl => {
                 const dlEl = deadlinesContainer.createEl('div', { cls: 'grotto-deadline-card' });
                 const cardContainer = dlEl.createEl('div', { cls: 'grotto-deadline-card-container' });
-                // Render the Title
+                // Title
                 const titleEl = cardContainer.createEl('span', { text: dl.title, cls: 'grotto-deadline-title' });
                 titleEl.setText(dl.title);
-                // Render the Deadline Date
+                // Deadline Date
                 const dateEl = cardContainer.createEl('div', { cls: 'grotto-deadline-date' });
                 const deadlineDate = new Date(dl.dateTime);
-                dateEl.setText(
-                    deadlineDate.toLocaleString('en-GB', {
+                dateEl.createEl('span', {
+                    text: 'Deadline',
+                    cls: 'grotto-deadline-label'
+                });
+                dateEl.createEl('span', {
+                    text: ': ' + deadlineDate.toLocaleString('en-GB', {
                         hour: 'numeric',
                         minute: 'numeric',
                         hour12: true,
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric'
-                    })
-                );
-                // Render the Remaining Time
+                    }),
+                    cls: 'grotto-deadline-date-value'
+                });
+                // Interval
+                const intervalTimeEl = cardContainer.createEl('div', { cls: 'grotto-deadline-interval' });
+                if (dl.recurrence > 0) {
+                    intervalTimeEl.createEl('span', {
+                        text: 'Interval',
+                        cls: 'grotto-deadline-label'
+                    });
+                    intervalTimeEl.createEl('span', {
+                        text: `: Every ${dl.recurrence} day${dl.recurrence > 1 ? 's' : ''}`,
+                        cls: 'grotto-deadline-interval-value'
+                    });
+                }
+                // Remaining Time
                 const remainingTimeEl = cardContainer.createEl('div', { cls: 'grotto-deadline-remaining' });
-                // Function to update the remaining time
-                function updateRemainingTime() {
-                    const deadlineDate = new Date(dl.dateTime);
+                const remainingLabelEl = remainingTimeEl.createEl('span');
+                const remainingValueEl = remainingTimeEl.createEl('span', { cls: 'grotto-deadline-time-value' });
+                const updateRemainingTime = () => {
                     const now = new Date();
-                    const timeDifference = deadlineDate.getTime() - now.getTime();
-                    // If the deadline has passed
-                    if (timeDifference <= 0) {
-                        if (dl.recurrence && typeof dl.recurrence === 'number' && dl.recurrence > 0) {
-                            // Handle recurrence if deadline has passed and recurrence is set
-                            const recurrenceInterval = dl.recurrence;
-                            deadlineDate.setDate(deadlineDate.getDate() + recurrenceInterval); // Update deadline date to next recurrence
-                            dl.dateTime = deadlineDate.toISOString();
-                            dateEl.setText(`${deadlineDate.toLocaleString('en-GB', {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                            })}`);
-                            remainingTimeEl.setText(`Resets: ${formatRemainingTime(deadlineDate)}`);
-                            return;
+                    const deadlineDate = new Date(dl.dateTime);
+                    const diff = deadlineDate.getTime() - now.getTime();
+                    remainingLabelEl.setText('');
+                    remainingValueEl.setText('');
+                    remainingLabelEl.removeClass('grotto-deadline-ends');
+                    remainingLabelEl.removeClass('grotto-deadline-resets');
+                    remainingLabelEl.removeClass('grotto-deadline-passed');
+                    if (diff <= 0) {
+                        if (dl.recurrence && dl.recurrence > 0) {
+                            const next = new Date(deadlineDate);
+                            next.setDate(next.getDate() + dl.recurrence);
+                            dl.dateTime = next.toISOString();
+                            remainingLabelEl.setText('Resets in');
+                            remainingLabelEl.addClass('grotto-deadline-resets');
+                            remainingValueEl.setText(': ' + formatTime(next));
                         } else {
-                            // If there's no recurrence
-                            remainingTimeEl.setText('Deadline passed');
-                            dateEl.setText(`Deadline was at ${deadlineDate.toLocaleString('en-GB', {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                            })}`);
-                            return;
+                            remainingLabelEl.setText('Deadline Passed');
+                            remainingLabelEl.addClass('grotto-deadline-passed');
+                        }
+                    } else {
+                        if (dl.recurrence && dl.recurrence > 0) {
+                            remainingLabelEl.setText('Resets in');
+                            remainingLabelEl.addClass('grotto-deadline-resets');
+                            remainingValueEl.setText(': ' + formatTime(deadlineDate));
+                        } else {
+                            remainingLabelEl.setText('Ends in');
+                            remainingLabelEl.addClass('grotto-deadline-ends');
+                            remainingValueEl.setText(': ' + formatTime(deadlineDate));
                         }
                     }
-                    // If it's a recurring deadline, show "Deadline resets in..."
-                    if (dl.recurrence && dl.recurrence > 0) {
-                        remainingTimeEl.setText(`Resets: ${formatRemainingTime(deadlineDate)}`);
-                    } else {
-                        // If it's a non-recurring deadline, show "Deadline approaches in..."
-                        remainingTimeEl.setText(`Ends: ${formatRemainingTime(deadlineDate)}`);
-                    }
-                }
-                // Helper function to format the remaining time
-                function formatRemainingTime(deadlineDate: Date) {
-                    const now = new Date();
-                    const timeDifference = deadlineDate.getTime() - now.getTime();
-                    const remainingDays = Math.floor(timeDifference / (1000 * 3600 * 24));
-                    const remainingHours = Math.floor((timeDifference % (1000 * 3600 * 24)) / (1000 * 3600));
-                    const remainingMinutes = Math.floor((timeDifference % (1000 * 3600)) / (1000 * 60));
-                    let remainingTimeText = '';
-                    if (remainingDays > 0) {
-                        remainingTimeText += `${remainingDays} days `;
-                    }
-                    if (remainingHours > 0) {
-                        remainingTimeText += `${remainingHours} hours `;
-                    }
-                    remainingTimeText += `${remainingMinutes} minutes`;
-                    return remainingTimeText;
-                }
-                // Update the remaining time every second
+                    this.plugin.saveSettings();
+                };
+                //Function for formatting time
+                const formatTime = (date: Date) => {
+                    const diff = date.getTime() - new Date().getTime();
+                    const days = Math.floor(diff / (1000 * 3600 * 24));
+                    const hours = Math.floor((diff % (1000 * 3600 * 24)) / (1000 * 3600));
+                    const mins = Math.floor((diff % (1000 * 3600)) / (1000 * 60));
+                    return `${days > 0 ? days + ' days ' : ''}${hours > 0 ? hours + ' hours ' : ''}${mins} minutes`;
+                };
+                // Initial call and interval
                 updateRemainingTime();
                 setInterval(updateRemainingTime, 1000);
-                // DRAG HANDLE
-                const handle = dlEl.createEl('span', { cls: 'grotto-drag-handle' });
-                handle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
-                // DELETE ICON
-                const deleteIcon = dlEl.createEl('span', { cls: 'grotto-delete-deadline-icon' });
-                deleteIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M6 18L18 6M6 6l12 12"></path></svg>`; // Insert lucide-x icon as SVG
-                // Handle click on delete icon
+                const actionsContainer = dlEl.createEl('div', { cls: 'grotto-deadline-actions' });
+                // Move Up Icon
+                const moveUpIcon = actionsContainer.createEl('span', { cls: 'clickable-icon' });
+                moveUpIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
+                moveUpIcon.onclick = async () => {
+                    const categoryItems = this.plugin.settings.deadlines!.filter(d => d.category === category);
+                    const idx = categoryItems.indexOf(dl);
+                    if (idx > 0) {
+                        const globalIdx = this.plugin.settings.deadlines!.indexOf(dl);
+                        const prevItem = categoryItems[idx - 1];
+                        const prevGlobalIdx = this.plugin.settings.deadlines!.indexOf(prevItem);
+                        [this.plugin.settings.deadlines![globalIdx], this.plugin.settings.deadlines![prevGlobalIdx]] =
+                            [this.plugin.settings.deadlines![prevGlobalIdx], this.plugin.settings.deadlines![globalIdx]];
+                        await this.plugin.saveSettings();
+                        this.display();
+                    }
+                };
+                // Move Down Icon
+                const moveDownIcon = actionsContainer.createEl('span', { cls: 'clickable-icon' });
+                moveDownIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
+                moveDownIcon.onclick = async () => {
+                    const categoryItems = this.plugin.settings.deadlines!.filter(d => d.category === category);
+                    const idx = categoryItems.indexOf(dl);
+                    if (idx < categoryItems.length - 1) {
+                        const globalIdx = this.plugin.settings.deadlines!.indexOf(dl);
+                        const nextItem = categoryItems[idx + 1];
+                        const nextGlobalIdx = this.plugin.settings.deadlines!.indexOf(nextItem);
+                        [this.plugin.settings.deadlines![globalIdx], this.plugin.settings.deadlines![nextGlobalIdx]] =
+                            [this.plugin.settings.deadlines![nextGlobalIdx], this.plugin.settings.deadlines![globalIdx]];
+                        await this.plugin.saveSettings();
+                        this.display();
+                    }
+                };
+                // Delete Icon
+                const deleteIcon = actionsContainer.createEl('span', { cls: 'clickable-icon' });
+                deleteIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M6 18L18 6M6 6l12 12"/></svg>`;
                 deleteIcon.onclick = async () => {
                     const idx = this.plugin.settings.deadlines!.indexOf(dl);
-                    if (idx > -1) {
-                        this.plugin.settings.deadlines!.splice(idx, 1);
-                    }
+                    if (idx > -1) this.plugin.settings.deadlines!.splice(idx, 1);
                     await this.plugin.saveSettings();
                     this.display();
                     new Notice('Deadline removed');
                 };
-                dlEl.draggable = true;
-                (dlEl as any)._deadlineRef = dl;
-                // Drag events
-                dlEl.addEventListener('dragstart', () => {
-                    draggedItem = dlEl;
-                });
-                dlEl.addEventListener('dragend', () => {
-                    draggedItem = null;
-                });
             });
             // Delete button for empty categories
+            // REMINDER: Maybe switch this to a clickable icon instead of a chonky button
             if (categoryDeadlines.length === 0 && category !== DEFAULT_CATEGORY) {
                 const deleteCategoryBtn = deadlinesContainer.createEl('button', { text: 'Delete Category', cls: 'grotto-delete-category-btn' });
                 deleteCategoryBtn.onclick = async () => {
@@ -534,8 +600,9 @@ class CountdownSettingsTab extends PluginSettingTab {
                     new Notice(`Category "${category}" deleted`);
                 };
             }
+            else if (categoryDeadlines.length === 0 && category == DEFAULT_CATEGORY) {
+                deadlinesContainer.createEl('p', { text: 'This is the default category', cls: 'grotto-default-category-message' });
+            }
         });
     }
 }
-
-
