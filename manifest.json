@@ -1,10 +1,10 @@
 {
 	"id": "grotto-deadline-scheduler",
-	"name": "Deadline Countdown",
+	"name": "Deadline Scheduler",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Controls for scheduling deadlines",
+	"description": "Set and manage deadlines",
 	"author": "HotAndCold",
-	"authorUrl": "https://github.com/HotAndCold245/Deadline-Countdown",
+	"authorUrl": "https://github.com/HotAndCold245",
 	"isDesktopOnly": false
 }
