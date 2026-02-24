@@ -1,24 +1,28 @@
 {
-	"name": "grotto-deadline-scheduler",
+	"name": "grotto-deadline-countdown",
 	"version": "1.0.0",
-	"description": "Controls for deadline scheduling",
+	"description": "Deadline countdown plugin for obsidian",
 	"main": "main.js",
+	"type": "module",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"lint": "eslint ."
 	},
 	"keywords": [],
-	"author": "HotAndCold",
 	"license": "MIT",
 	"devDependencies": {
+		"@eslint/js": "9.30.1",
 		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
-		"builtin-modules": "3.3.0",
-		"esbuild": "^0.25.10",
-		"obsidian": "latest",
+		"builtin-modules": "^5.0.0",
+		"esbuild": "0.25.5",
+		"globals": "14.0.0",
+		"jiti": "2.6.1",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"obsidian": "latest"
 	}
 }
