@@ -3,7 +3,7 @@
 	"name": "Deadline Countdown",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Set and manage deadlines",
+	"description": "Set and manage deadlines.",
 	"author": "HotAndCold",
 	"authorUrl": "https://github.com/HotAndCold245",
 	"isDesktopOnly": false
