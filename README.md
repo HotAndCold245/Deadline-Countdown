@@ -2,7 +2,7 @@
 
 Tell me. Do you fear deadlines? 
 
-This plugin allows the user to set and manage deadlines with a convenient way to watch time fly away from the sidebar. 
+This plugin allows you to set and manage deadlines with a convenient way to watch time fly away from the sidebar. 
 
 # User Manual
 1. Set a title for the deadline.
