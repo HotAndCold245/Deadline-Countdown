@@ -8,13 +8,15 @@ This plugin allows the user to set and manage deadlines with a convenient way to
 1. Set a title for the deadline.
 2. Set a date and time for the deadline.
 3. Select whether the deadline will repeat itself after the time is up.
-4. Select the interval of recurrence using the slider. It ranges between 1 and 30 days. This slider will not be visible if recurrence is toggled off. 
-5. Set a category for the deadline. This step is optional. Any deadline that does not have a category will move to the default 'General' category. Currently, there is no way to get suggestions to help auto-pick from existing categories. Specific categories will have to be properly typed out. I will improve this later.
-6. Save the deadline using the button. 
+4. Select the interval of recurrence using the slider. It ranges between 1 and 30 days. This slider will not be visible if recurrence is toggled off.
+5. Select whether the deadline should give a visual warning before the time is up.
+6. Select how much time in advance the warning will be given. It ranges between 1 and 24 hours. This slider will not be visible if warning is toggled off.
+7. Set a category for the deadline. This step is optional. Any deadline that does not have a category will move to the default 'General' category. 
+8. Save the deadline using the button. 
 
-![Settings1](https://github.com/user-attachments/assets/42968dc8-f7de-4ca1-a6d1-83d33e22167a)
+![Settings1](https://github.com/user-attachments/assets/09de4d51-ef69-4363-8958-8846586260d0)
 
-Deadlines will appear in this section in the settings menu. They can be deleted and moved around, BUT, the position can only be adjusted within the same category for now. I will improve this later.
+Deadlines will appear in this section in the settings menu. They can be deleted and rearranged, BUT, the position can only be adjusted within the same category. I will NOT improve this later.
 
 ![Settings2](https://github.com/user-attachments/assets/5b0bb8b4-560d-499b-9675-b63c78491316)
 
@@ -33,6 +35,7 @@ There is a command to open the sidebar view. It is only available if the sidebar
 ![Sidebar2](https://github.com/user-attachments/assets/da30f0c0-e6d0-4f86-a0dd-12634a67dc3e)
 
 # Mobile Support
+The plugin is entirely compatible with the mobile version of Obsidian. 
 
 ![Mobile1](https://github.com/user-attachments/assets/1383e233-9e4e-4a33-8266-959d533f0262)
 
