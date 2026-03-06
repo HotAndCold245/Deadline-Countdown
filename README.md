@@ -21,11 +21,11 @@ Deadlines will appear in this section in the settings menu. They can be deleted 
 ![Settings2](https://github.com/user-attachments/assets/5b0bb8b4-560d-499b-9675-b63c78491316)
 
 # SideBar View
-The deadlines can be viewed from the sidebar. There is a button at the top to refresh the timer on the deadlines. I made it manual to avoid potential visual flickers from constantly auto-refreshing the entire viewport. The deadlines are arranged exactly as they appear in the management section of the settings menu. 
+The deadlines can be viewed from the sidebar. There is a button at the top to refresh the deadlines. The deadlines will be arranged in the same order as they appear in the management section of the settings menu. 
 
-If a deadline repeats, the interval for repeating will be displayed. Once the deadline is reached, the date of the deadline will update to the next possible time and will start counting down again. If a deadline does not repeat, when the time is over, the message "Deadline passed" will display in place of the timer. 
+If a deadline repeats, once the deadline is reached, the date of the deadline will update to the next possible time and will start counting down again. If a deadline does not repeat, when the time is over, the message "Deadline passed" will display in place of the timer. 
 
-When a deadline is approaching, as in, when it is within 1 hour of ending or resetting, it will appear inside a red box as a warning. Currently, there is no way to adjust when this warning begins. I will improve this later.
+When a deadline is approaching, it will appear inside a red box as a warning. Pressing the refresh button will clear existing warnings on deadlines that have reset. I made it manual so that these warnings aren't automatically removed when opening the app.
 
 ![Sidebar1](https://github.com/user-attachments/assets/82ad74a6-e8d1-4748-9d57-b957be84d40c)
 
