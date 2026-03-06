@@ -40,10 +40,6 @@
 .grotto-deadline-actions {
   display: flex;
 }
-.grotto-deadline-actions .clickable-icon {
-  background-color: transparent;
-  padding: 4px;
-}
 /* Delete Button for empty categories */
 .grotto-delete-category-btn {
   margin-top: 8px;
@@ -89,8 +85,8 @@
   border: 1px solid var(--text-normal);
   border-width: 1px 1px 0px 1px;
 }
-/* Deadline container when urgent status is active */
-.grotto-deadline-card.grotto-deadline-urgent {
+/* Deadline container when warning status is active */
+.grotto-deadline-card.grotto-deadline-warning {
   --grotto-light-5: hsl(33, 33%, 90%);
   color: var(--grotto-light-5);
   background-color: var(--text-error);
@@ -98,18 +94,23 @@
   border-radius: 0rem;
   padding: 4px;
 }
-.grotto-deadline-card.grotto-deadline-urgent .grotto-deadline-title {
-  text-decoration: underline solid var(--text-normal);
+.grotto-deadline-card.grotto-deadline-warning .grotto-deadline-title {
+  --grotto-light-5: hsl(33, 33%, 90%);
+  color: var(--grotto-light-5);
+  text-decoration: underline solid var(--grotto-light-5);
 }
-.grotto-deadline-card.grotto-deadline-urgent .grotto-deadline-label, 
-.grotto-deadline-card.grotto-deadline-urgent .grotto-deadline-interval, 
-.grotto-deadline-card.grotto-deadline-urgent .grotto-deadline-resets, 
-.grotto-deadline-card.grotto-deadline-urgent .grotto-deadline-ends {
-  color: var(--text-normal);
+.grotto-deadline-card.grotto-deadline-warning .grotto-deadline-label, 
+.grotto-deadline-card.grotto-deadline-warning .grotto-deadline-interval, 
+.grotto-deadline-card.grotto-deadline-warning .grotto-deadline-warning-time, 
+.grotto-deadline-card.grotto-deadline-warning .grotto-deadline-resets, 
+.grotto-deadline-card.grotto-deadline-warning .grotto-deadline-ends {
+  --grotto-light-5: hsl(33, 33%, 90%);
+  color: var(--grotto-light-5);
 }
 /* Deadline standard texts */
 .grotto-deadline-label {
   color: var(--color-accent);
+  width: 200px !important;
 }
 .grotto-deadline-ends {
   color: var(--color-accent);
@@ -123,8 +124,16 @@
   padding-left: 4px;
 }
 .grotto-deadline-interval-value {
-  padding-left: 12px;
+  padding-left: 12px; 
 }
 .grotto-deadline-time-value {
   padding-left: 3px;
+}
+.grotto-deadline-warning-value {
+  padding-left: 6px;
+}
+
+/* Sliders */ 
+.grotto-hidden-slider {
+  display: none;
 }
