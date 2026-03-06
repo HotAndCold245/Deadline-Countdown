@@ -129,7 +129,7 @@ export class GrottoSidebarView extends ItemView {
         await Promise.resolve();
         this.intervalId = window.setInterval(() => {
             this.refreshSidebar();
-        }, 1000);
+        }, 60000);
     }
     async onClose() {
         if (this.intervalId) {
@@ -141,14 +141,6 @@ export class GrottoSidebarView extends ItemView {
         const container = this.containerEl.createEl("div", {
             cls: "grotto-deadline-container-sidebar"
         });
-        // Refresh Button
-        const refreshButtonContainer = container.createEl("div", {
-            cls: "grotto-refresh-button-container"
-        });
-        const refreshButton = refreshButtonContainer.createEl("button", {
-            text: "Refresh"
-        });
-        refreshButton.addEventListener("click", () => this.refreshSidebar());
         // In case there are no active deadlines
         if (!this.plugin.settings.deadlines || this.plugin.settings.deadlines.length === 0) {
             container.createEl("p", {
