@@ -502,7 +502,7 @@ var DeadlineSettingsTab = class extends import_obsidian.PluginSettingTab {
           return `${days > 0 ? days + " days " : ""}${hours > 0 ? hours + " hours " : ""}${mins} minutes`;
         };
         updateRemainingTime();
-        setInterval(updateRemainingTime, 1e3);
+        setInterval(updateRemainingTime, 6e4);
         const actionsContainer = dlEl.createEl("div", { cls: "grotto-deadline-actions" });
         const movementContainer = actionsContainer.createEl("div", { cls: "grotto-deadline-move-actions" });
         const moveUp = movementContainer.createEl("span", {
