@@ -26,7 +26,7 @@ interface DeadlineSettings {
     deadlineWarningValue?: number;
     categories: string[];
     selectedCategory?: string;
-    deadlines?: Deadline[];
+    deadlines: Deadline[];
 }
 
 interface Deadline {
@@ -44,6 +44,7 @@ const DEFAULT_SETTINGS: DeadlineSettings = {
     deadlineWarningSet: false,
     categories: [DEFAULT_CATEGORY],
     selectedCategory: DEFAULT_CATEGORY,
+    deadlines: []
 };
 
 export default class DeadlinePlugin extends Plugin {
@@ -106,6 +107,7 @@ export default class DeadlinePlugin extends Plugin {
     }
 }
 
+
 export class GrottoSidebarView extends ItemView {
     plugin: DeadlinePlugin;
     constructor(leaf: WorkspaceLeaf, plugin: DeadlinePlugin) {
@@ -121,9 +123,18 @@ export class GrottoSidebarView extends ItemView {
     getIcon(): string {
         return "deadline-preset-icon";
     }
+    private intervalId: number | null = null;
     async onOpen(): Promise<void> {
-        this.containerEl.empty();
         this.renderSidebar();
+        await Promise.resolve();
+        this.intervalId = window.setInterval(() => {
+            this.refreshSidebar();
+        }, 1000);
+    }
+    async onClose() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
     }
     renderSidebar() {
         this.containerEl.empty();
@@ -265,7 +276,6 @@ export class GrottoSidebarView extends ItemView {
             void this.plugin.saveSettings();
         };
         update();
-        setInterval(update, 1000);
     }
     formatRemainingTime(deadlineDate: Date) {
         const now = new Date();
@@ -391,7 +401,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                         // Hide or show the recurrence slider
                         warningSliderSetting.settingEl.toggleClass('grotto-hidden-slider', !value);
                         // Save settings after the change
-                        this.plugin.saveSettings();
+                        void this.plugin.saveSettings();
                     });
             });
         // Warning Slider
