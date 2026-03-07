@@ -49,7 +49,6 @@ const DEFAULT_SETTINGS: DeadlineSettings = {
 
 export default class DeadlinePlugin extends Plugin {
     settings: DeadlineSettings = DEFAULT_SETTINGS;
-    deadlines: Deadline[] = [];
     async onload(): Promise<void> {
         await this.loadSettings();
         this.registerView(
@@ -107,7 +106,6 @@ export default class DeadlinePlugin extends Plugin {
     }
 }
 
-
 export class GrottoSidebarView extends ItemView {
     plugin: DeadlinePlugin;
     constructor(leaf: WorkspaceLeaf, plugin: DeadlinePlugin) {
@@ -131,9 +129,11 @@ export class GrottoSidebarView extends ItemView {
             this.refreshSidebar();
         }, 60000);
     }
-    async onClose() {
-        if (this.intervalId) {
+    async onClose(): Promise<void> {
+        await Promise.resolve();
+        if (this.intervalId !== null) {
             clearInterval(this.intervalId);
+            this.intervalId = null;
         }
     }
     renderSidebar() {
@@ -241,36 +241,20 @@ export class GrottoSidebarView extends ItemView {
             cls: 'grotto-deadline-time-value'
         });
         const update = () => {
-            const now = new Date();
-            const deadlineDate = new Date(deadline.dateTime);
-            const diff = deadlineDate.getTime() - now.getTime();
-            // Reset
+            // Reset classes and text
             remainingLabelEl.setText('');
             remainingValueEl.setText('');
             remainingLabelEl.removeClass('grotto-deadline-ends');
             remainingLabelEl.removeClass('grotto-deadline-resets');
             remainingLabelEl.removeClass('grotto-deadline-passed');
-            if (diff <= 0) {
-                if (deadline.recurrence && deadline.recurrence > 0) {
-                    const next = new Date(deadlineDate);
-                    next.setDate(next.getDate() + deadline.recurrence);
-                    deadline.dateTime = next.toISOString();
-                    remainingLabelEl.setText('Resets in');
-                    remainingLabelEl.addClass('grotto-deadline-resets');
-                    remainingValueEl.setText(': ' + this.formatRemainingTime(next));
-                } else {
-                    remainingLabelEl.setText('Deadline passed');
-                    remainingLabelEl.addClass('grotto-deadline-passed');
-                }
-            } else {
-                if (deadline.recurrence && deadline.recurrence > 0) {
-                    remainingLabelEl.setText('Resets in');
-                    remainingLabelEl.addClass('grotto-deadline-resets');
-                    remainingValueEl.setText(': ' + this.formatRemainingTime(deadlineDate));
-                } else {
-                    remainingLabelEl.setText('Ends in');
-                    remainingLabelEl.addClass('grotto-deadline-ends');
-                    remainingValueEl.setText(': ' + this.formatRemainingTime(deadlineDate));
+            const status = calculateRemaining(deadline);
+            remainingLabelEl.setText(status.label);
+            remainingLabelEl.addClass(status.className);
+            if (status.nextDate) {
+                remainingValueEl.setText(': ' + this.formatRemainingTime(status.nextDate));
+                // Update the deadline object if it recurred
+                if (status.label === "Resets in" && new Date(deadline.dateTime) <= new Date()) {
+                    deadline.dateTime = status.nextDate.toISOString();
                 }
             }
             void this.plugin.saveSettings();
@@ -377,10 +361,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                     });
             });
         // Control visibility of the recurrence slider
-        recurrenceSliderSetting.settingEl.toggleClass(
-            'grotto-hidden-slider',
-            !this.plugin.settings.deadlineRecurrenceSet
-        );
+        recurrenceSliderSetting.settingEl.toggleClass('grotto-hidden-slider', !this.plugin.settings.deadlineRecurrenceSet);
         // Warning Toggle
         new Setting(deadlineItems)
             .setName('Warning')
@@ -418,10 +399,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                     });
             });
         // Control visibility of the warning slider
-        warningSliderSetting.settingEl.toggleClass(
-            'grotto-hidden-slider',
-            !this.plugin.settings.deadlineWarningSet
-        );
+        warningSliderSetting.settingEl.toggleClass('grotto-hidden-slider',!this.plugin.settings.deadlineWarningSet);
         // Category
         let categoryInput: string = "";
         let textComponent: TextComponent;
@@ -504,8 +482,6 @@ class DeadlineSettingsTab extends PluginSettingTab {
             // Deadlines in categories
             const deadlinesContainer = categoryContainer.createEl('div', { cls: 'grotto-deadlines-container' });
             const categoryDeadlines = (this.plugin.settings.deadlines || []).filter(dl => dl.category === category);
-            // REMINDER: Update this view in the settings tab to be more elaborate after adding the edit function
-            // Currently, this is identical to the sidebar view
             categoryDeadlines.forEach(dl => {
                 const dlEl = deadlinesContainer.createEl('div', { cls: 'grotto-deadline-card' });
                 const cardContainer = dlEl.createEl('div', { cls: 'grotto-deadline-card-container' });
@@ -559,35 +535,19 @@ class DeadlineSettingsTab extends PluginSettingTab {
                 const remainingLabelEl = remainingTimeEl.createEl('span');
                 const remainingValueEl = remainingTimeEl.createEl('span', { cls: 'grotto-deadline-time-value' });
                 const updateRemainingTime = () => {
-                    const now = new Date();
-                    const deadlineDate = new Date(dl.dateTime);
-                    const diff = deadlineDate.getTime() - now.getTime();
                     remainingLabelEl.setText('');
                     remainingValueEl.setText('');
                     remainingLabelEl.removeClass('grotto-deadline-ends');
                     remainingLabelEl.removeClass('grotto-deadline-resets');
                     remainingLabelEl.removeClass('grotto-deadline-passed');
-                    if (diff <= 0) {
-                        if (dl.recurrence && dl.recurrence > 0) {
-                            const next = new Date(deadlineDate);
-                            next.setDate(next.getDate() + dl.recurrence);
-                            dl.dateTime = next.toISOString();
-                            remainingLabelEl.setText('Resets in');
-                            remainingLabelEl.addClass('grotto-deadline-resets');
-                            remainingValueEl.setText(': ' + formatTime(next));
-                        } else {
-                            remainingLabelEl.setText('Deadline passed');
-                            remainingLabelEl.addClass('grotto-deadline-passed');
-                        }
-                    } else {
-                        if (dl.recurrence && dl.recurrence > 0) {
-                            remainingLabelEl.setText('Resets in');
-                            remainingLabelEl.addClass('grotto-deadline-resets');
-                            remainingValueEl.setText(': ' + formatTime(deadlineDate));
-                        } else {
-                            remainingLabelEl.setText('Ends in');
-                            remainingLabelEl.addClass('grotto-deadline-ends');
-                            remainingValueEl.setText(': ' + formatTime(deadlineDate));
+                    const status = calculateRemaining(dl);
+                    remainingLabelEl.setText(status.label);
+                    remainingLabelEl.addClass(status.className);
+                    if (status.nextDate) {
+                        remainingValueEl.setText(': ' + formatTime(status.nextDate));
+                        // Update the deadline object if it recurred
+                        if (status.label === 'Resets in' && new Date(dl.dateTime) <= new Date()) {
+                            dl.dateTime = status.nextDate.toISOString();
                         }
                     }
                     void this.plugin.saveSettings();
@@ -606,20 +566,21 @@ class DeadlineSettingsTab extends PluginSettingTab {
                 // Actions
                 const actionsContainer = dlEl.createEl('div', { cls: 'grotto-deadline-actions' });
                 const movementContainer = actionsContainer.createEl('div', { cls: 'grotto-deadline-move-actions' });
+                const deadlineItems = this.plugin.settings.deadlines;
                 // Move Up
                 const moveUp = movementContainer.createEl('span', {
                     cls: 'clickable-icon'
                 });
                 setIcon(moveUp, 'chevron-up');
                 moveUp.onclick = async () => {
-                    const categoryItems = (this.plugin.settings.deadlines || []).filter(d => d.category === category);
+                    const categoryItems = (deadlineItems || []).filter(d => d.category === category);
                     const idx = categoryItems.indexOf(dl);
                     if (idx > 0) {
-                        const globalIdx = this.plugin.settings.deadlines!.indexOf(dl);
+                        const globalIdx = deadlineItems.indexOf(dl);
                         const prevItem = categoryItems[idx - 1];
-                        const prevGlobalIdx = this.plugin.settings.deadlines!.indexOf(prevItem);
-                        [this.plugin.settings.deadlines![globalIdx], this.plugin.settings.deadlines![prevGlobalIdx]] =
-                            [this.plugin.settings.deadlines![prevGlobalIdx], this.plugin.settings.deadlines![globalIdx]];
+                        const prevGlobalIdx = deadlineItems.indexOf(prevItem);
+                        [deadlineItems[globalIdx], deadlineItems[prevGlobalIdx]] =
+                            [deadlineItems[prevGlobalIdx], deadlineItems[globalIdx]];
                         await this.plugin.saveSettings();
                         this.display();
                     }
@@ -630,14 +591,14 @@ class DeadlineSettingsTab extends PluginSettingTab {
                 });
                 setIcon(moveDown, 'chevron-down');
                 moveDown.onclick = async () => {
-                    const categoryItems = (this.plugin.settings.deadlines || []).filter(d => d.category === category);
+                    const categoryItems = (deadlineItems || []).filter(d => d.category === category);
                     const idx = categoryItems.indexOf(dl);
                     if (idx < categoryItems.length - 1) {
-                        const globalIdx = this.plugin.settings.deadlines!.indexOf(dl);
+                        const globalIdx = deadlineItems.indexOf(dl);
                         const nextItem = categoryItems[idx + 1];
-                        const nextGlobalIdx = this.plugin.settings.deadlines!.indexOf(nextItem);
-                        [this.plugin.settings.deadlines![globalIdx], this.plugin.settings.deadlines![nextGlobalIdx]] =
-                            [this.plugin.settings.deadlines![nextGlobalIdx], this.plugin.settings.deadlines![globalIdx]];
+                        const nextGlobalIdx = deadlineItems.indexOf(nextItem);
+                        [deadlineItems[globalIdx], deadlineItems[nextGlobalIdx]] =
+                            [deadlineItems[nextGlobalIdx], deadlineItems[globalIdx]];
                         await this.plugin.saveSettings();
                         this.display();
                     }
@@ -648,15 +609,14 @@ class DeadlineSettingsTab extends PluginSettingTab {
                 });
                 setIcon(deadlineDelete, 'trash');
                 deadlineDelete.onclick = async () => {
-                    const idx = this.plugin.settings.deadlines!.indexOf(dl);
-                    if (idx > -1) this.plugin.settings.deadlines!.splice(idx, 1);
+                    const idx = deadlineItems.indexOf(dl);
+                    if (idx > -1) deadlineItems.splice(idx, 1);
                     await this.plugin.saveSettings();
                     this.display();
                     new Notice('Deadline removed');
                 };
             });
             // Delete button for empty categories
-            // REMINDER: Maybe switch this to a clickable icon instead of a chonky button
             if (categoryDeadlines.length === 0 && category !== DEFAULT_CATEGORY) {
                 const deleteCategoryBtn = deadlinesContainer.createEl('button', { text: 'Delete category', cls: 'grotto-delete-category-btn' });
                 deleteCategoryBtn.onclick = async () => {
@@ -695,4 +655,38 @@ class CategorySuggest extends AbstractInputSuggest<string> {
         this.inputEl.dispatchEvent(new Event("input"));
         this.close();
     }
+}
+
+function calculateRemaining(deadline: Deadline) {
+    const now = new Date();
+    const deadlineDate = new Date(deadline.dateTime);
+    const diff = deadlineDate.getTime() - now.getTime();
+    if (diff <= 0) {
+        if (deadline.recurrence && deadline.recurrence > 0) {
+            const next = new Date(deadlineDate);
+            next.setDate(next.getDate() + deadline.recurrence);
+            return {
+                label: "Resets in",
+                className: "grotto-deadline-resets",
+                nextDate: next
+            };
+        }
+        return {
+            label: "Deadline passed",
+            className: "grotto-deadline-passed",
+            nextDate: null
+        };
+    }
+    if (deadline.recurrence && deadline.recurrence > 0) {
+        return {
+            label: "Resets in",
+            className: "grotto-deadline-resets",
+            nextDate: deadlineDate
+        };
+    }
+    return {
+        label: "Ends in",
+        className: "grotto-deadline-ends",
+        nextDate: deadlineDate
+    };
 }
