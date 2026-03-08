@@ -21,7 +21,7 @@ Deadlines will appear in this section in the settings menu. They can be deleted 
 ![Settings2](https://github.com/user-attachments/assets/5b0bb8b4-560d-499b-9675-b63c78491316)
 
 # SideBar View
-The deadlines can be viewed from the sidebar where they are arranged in the same order as they appear in the management section of the settings menu. There is a refresh button at the top to manually update the list after adding or removing deadlines. Clicking on the category title will collapse/expand the list.
+The deadlines can be viewed from the sidebar where they are arranged in the same order as they appear in the management section of the settings menu. There is a refresh button at the top to manually update the list after adding or removing deadlines. It also refreshes the remaining time for the deadlines because the timers do not refresh periodically in order to reduce unnecessary screen updates. Clicking on the category title will collapse/expand the list.
 
 If a deadline repeats, once the deadline is reached, the date of the deadline will update to the next possible time and will start counting down again. If a deadline does not repeat, when the time is over, the message "Deadline passed" will display in place of the timer. 
 
