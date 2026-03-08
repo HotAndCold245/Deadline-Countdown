@@ -150,7 +150,8 @@
 }
 
 /* Delete button for passed deadlines */
-.clickable-icon.grotto-deadline-delete-right {
+.clickable-icon.grotto-deadline-delete-right, 
+.is-mobile .clickable-icon.grotto-deadline-delete-right {
   --grotto-light-5: hsl(33, 33%, 90%);
   color: var(--grotto-light-5);
 }
