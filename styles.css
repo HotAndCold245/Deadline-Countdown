@@ -68,6 +68,7 @@
 .grotto-deadline-categories {
   border: 1px solid var(--text-normal);
   padding: 8px;
+  border-top-width: 0px;
 }
 .grotto-deadline-container-sidebar .grotto-deadline-card:last-child {
   padding-bottom: 0px;
@@ -83,7 +84,7 @@
   color: var(--grotto-light-5);
   background-color: var(--color-accent);
   border: 1px solid var(--text-normal);
-  border-width: 1px 1px 0px 1px;
+  border-width: 1px;
 }
 /* Deadline container when warning status is active */
 .grotto-deadline-card.grotto-deadline-warning {
@@ -136,4 +137,20 @@
 /* Sliders */ 
 .grotto-hidden-slider {
   display: none;
+}
+
+/* Collapsed Category in sidebar view */
+.grotto-deadline-categories.grotto-collapsed {
+    display: none;
+}
+
+.grotto-deadline-actions-sidebar {
+  display: flex;
+  flex-direction: row;
+}
+
+/* Delete button for passed deadlines */
+.clickable-icon.grotto-deadline-delete-right {
+  --grotto-light-5: hsl(33, 33%, 90%);
+  color: var(--grotto-light-5);
 }
