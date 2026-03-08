@@ -124,21 +124,9 @@ export class GrottoSidebarView extends ItemView {
     getIcon(): string {
         return "deadline-preset-icon";
     }
-    private intervalId: number | null = null;
     async onOpen(): Promise<void> {
         this.renderSidebar();
         await Promise.resolve();
-        // Auto update the timer every 10 seconds
-        this.intervalId = window.setInterval(() => {
-            this.refreshSidebar();
-        }, 1000);
-    }
-    async onClose(): Promise<void> {
-        await Promise.resolve();
-        if (this.intervalId !== null) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-        }
     }
     renderSidebar() {
         this.containerEl.empty();
