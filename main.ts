@@ -14,8 +14,8 @@ import {
 
 const DEADLINE_VIEW = "grotto-deadline-countdown";
 const DEFAULT_CATEGORY = "General";
-const DEFAULT_RECURRENCE = 1;
-const DEFAULT_WARNING = 1;
+const DEFAULT_RECURRENCE = 0;
+const DEFAULT_WARNING = 0;
 
 interface DeadlineSettings {
     deadlineTitle: string;
@@ -27,6 +27,7 @@ interface DeadlineSettings {
     categories: string[];
     selectedCategory?: string;
     deadlines: Deadline[];
+    collapsedCategories: string[];
 }
 
 interface Deadline {
@@ -44,7 +45,8 @@ const DEFAULT_SETTINGS: DeadlineSettings = {
     deadlineWarningSet: false,
     categories: [DEFAULT_CATEGORY],
     selectedCategory: DEFAULT_CATEGORY,
-    deadlines: []
+    deadlines: [],
+    collapsedCategories: []
 };
 
 export default class DeadlinePlugin extends Plugin {
@@ -55,13 +57,13 @@ export default class DeadlinePlugin extends Plugin {
             DEADLINE_VIEW,
             (leaf: WorkspaceLeaf) => new GrottoSidebarView(leaf, this)
         );
-        // Adding the main icon to represent the plugin
+        // This is the main icon to represent the plugin
         addIcon('deadline-preset-icon', '<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer-icon lucide-timer"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>');
         this.app.workspace.onLayoutReady(() => {
             void this.activateView();
         });
         this.addSettingTab(new DeadlineSettingsTab(this.app, this));
-        // Command Palette command to open the sidebar view if closed
+        // Command Palette command to open the sidebar view only available if closed
         this.addCommand({
             id: "show-deadline-view",
             name: "Open deadline view",
@@ -116,6 +118,7 @@ export class GrottoSidebarView extends ItemView {
         return DEADLINE_VIEW;
     }
     getDisplayText() {
+        // Revert this back from sentence case if the plugin gets approved
         return "Deadline countdown";
     }
     getIcon(): string {
@@ -125,9 +128,10 @@ export class GrottoSidebarView extends ItemView {
     async onOpen(): Promise<void> {
         this.renderSidebar();
         await Promise.resolve();
+        // Auto update the timer every 10 seconds
         this.intervalId = window.setInterval(() => {
             this.refreshSidebar();
-        }, 60000);
+        }, 1000);
     }
     async onClose(): Promise<void> {
         await Promise.resolve();
@@ -148,7 +152,7 @@ export class GrottoSidebarView extends ItemView {
         const refreshButton = refreshButtonContainer.createEl("button", {
             text: "Refresh"
         });
-        refreshButton.addEventListener("click", () => this.refreshSidebar());
+        refreshButton.onclick = () => this.refreshSidebar();
         // In case there are no active deadlines
         if (!this.plugin.settings.deadlines || this.plugin.settings.deadlines.length === 0) {
             container.createEl("p", {
@@ -161,19 +165,31 @@ export class GrottoSidebarView extends ItemView {
         const sortedCategories = Object.keys(groupedDeadlines).sort((a, b) => a.localeCompare(b));
         for (const category of sortedCategories) {
             const deadlines = groupedDeadlines[category];
-            let categorySection = this.containerEl.querySelector(`.grotto-category-section[data-category="${category}"]`);
-            if (!categorySection) {
-                categorySection = container.createEl('div', {
-                    cls: 'grotto-category-section'
-                });
-                categorySection.setAttribute('data-category', category);
-                categorySection.createEl('h3', {
-                    text: category
-                });
-            }
+            const categorySection = container.createEl('div', {
+                cls: 'grotto-category-section'
+            });
+            categorySection.setAttribute('data-category', category);
+            const categoryHeader = categorySection.createEl('h3', {
+                text: category,
+                cls: 'grotto-category-title'
+            });
+            categoryHeader.onclick = async () => {
+                const isCollapsed = deadlineList.hasClass("grotto-collapsed");
+                if (isCollapsed) {
+                    this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories.filter(c => c !== category);
+                    deadlineList.removeClass('grotto-collapsed');
+                } else {
+                    this.plugin.settings.collapsedCategories.push(category);
+                    deadlineList.addClass('grotto-collapsed');
+                }
+                await this.plugin.saveSettings();
+            };
             const deadlineList = categorySection.createEl('div', {
                 cls: 'grotto-deadline-categories'
             });
+            if (this.plugin.settings.collapsedCategories.includes(category)) {
+                deadlineList.addClass('grotto-collapsed');
+            }
             deadlines.forEach((dl) => {
                 const dlEl = deadlineList.createEl('div', {
                     cls: 'grotto-deadline-card'
@@ -219,6 +235,20 @@ export class GrottoSidebarView extends ItemView {
                     cls: 'grotto-deadline-remaining'
                 });
                 this.updateRemainingTime(dl, remainingTimeEl);
+                const status = calculateRemaining(dl);
+                if (status.label === "Deadline passed") {
+                    const deleteButton = dlEl.createEl('span', {
+                        cls: 'clickable-icon grotto-deadline-delete-right'
+                    });
+                    setIcon(deleteButton, 'trash');
+                    deleteButton.onclick = async () => {
+                        const idx = this.plugin.settings.deadlines.indexOf(dl);
+                        if (idx > -1) this.plugin.settings.deadlines.splice(idx, 1);
+                        await this.plugin.saveSettings();
+                        this.renderSidebar();
+                        new Notice('Deadline removed');
+                    };
+                }
             });
         }
     }
@@ -252,7 +282,7 @@ export class GrottoSidebarView extends ItemView {
             remainingLabelEl.addClass(status.className);
             if (status.nextDate) {
                 remainingValueEl.setText(': ' + this.formatRemainingTime(status.nextDate));
-                // Update the deadline object if it recurred
+                // Update the deadline time if it recurred
                 if (status.label === "Resets in" && new Date(deadline.dateTime) <= new Date()) {
                     deadline.dateTime = status.nextDate.toISOString();
                 }
@@ -339,7 +369,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                         }
                         // Set recurrence to the slider value when toggle is on
                         else {
-                            this.plugin.settings.deadlineRecurrenceValue = this.plugin.settings.deadlineRecurrenceValue || DEFAULT_RECURRENCE;
+                            this.plugin.settings.deadlineRecurrenceValue = this.plugin.settings.deadlineRecurrenceValue || 1;
                         }
                         // Hide or show the recurrence slider
                         recurrenceSliderSetting.settingEl.toggleClass('grotto-hidden-slider', !value);
@@ -377,7 +407,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                         }
                         // Set recurrence to the slider value when toggle is on
                         else {
-                            this.plugin.settings.deadlineWarningValue = this.plugin.settings.deadlineWarningValue || DEFAULT_WARNING;
+                            this.plugin.settings.deadlineWarningValue = this.plugin.settings.deadlineWarningValue || 1;
                         }
                         // Hide or show the recurrence slider
                         warningSliderSetting.settingEl.toggleClass('grotto-hidden-slider', !value);
@@ -399,7 +429,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                     });
             });
         // Control visibility of the warning slider
-        warningSliderSetting.settingEl.toggleClass('grotto-hidden-slider',!this.plugin.settings.deadlineWarningSet);
+        warningSliderSetting.settingEl.toggleClass('grotto-hidden-slider', !this.plugin.settings.deadlineWarningSet);
         // Category
         let categoryInput: string = "";
         let textComponent: TextComponent;
@@ -454,7 +484,9 @@ class DeadlineSettingsTab extends PluginSettingTab {
                         this.plugin.settings.deadlineTitle = '';
                         this.plugin.settings.deadlineDateTime = new Date().toISOString().slice(0, 16);
                         this.plugin.settings.selectedCategory = DEFAULT_CATEGORY;
+                        this.plugin.settings.deadlineRecurrenceSet = false;
                         this.plugin.settings.deadlineRecurrenceValue = DEFAULT_RECURRENCE;
+                        this.plugin.settings.deadlineWarningSet = false;
                         this.plugin.settings.deadlineWarningValue = DEFAULT_WARNING;
                         categoryInput = '';
                         textComponent.setValue('');
@@ -562,7 +594,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                 };
                 // Initial call and interval
                 updateRemainingTime();
-                setInterval(updateRemainingTime, 60000);
+                setInterval(updateRemainingTime, 10000);
                 // Actions
                 const actionsContainer = dlEl.createEl('div', { cls: 'grotto-deadline-actions' });
                 const movementContainer = actionsContainer.createEl('div', { cls: 'grotto-deadline-move-actions' });
