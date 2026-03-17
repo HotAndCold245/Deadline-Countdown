@@ -80,9 +80,8 @@
   padding-left: 8px;
   padding-top: 2px;
   padding-bottom: 2px;
-  --grotto-light-5: hsl(33, 33%, 90%);
-  color: var(--grotto-light-5);
-  background-color: var(--color-accent);
+  color: var(--background-secondary);
+  background-color: var(--text-normal);
   border: 1px solid var(--text-normal);
   border-width: 1px;
 }
