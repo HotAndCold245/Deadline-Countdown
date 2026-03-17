@@ -40,7 +40,7 @@ interface Deadline {
 
 const DEFAULT_SETTINGS: DeadlineSettings = {
     deadlineTitle: '',
-    deadlineDateTime: new Date().toISOString().slice(0, 16),
+    deadlineDateTime: '',
     deadlineRecurrenceSet: false,
     deadlineWarningSet: false,
     categories: [DEFAULT_CATEGORY],
@@ -369,7 +369,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
         let recurrenceSliderSetting: Setting;
         recurrenceSliderSetting = new Setting(deadlineItems)
             .setName('Recurrence interval')
-            .setDesc('Set how often this deadline repeats (1–30 days)')
+            .setDesc('Set how often the deadline repeats (1–30 days)')
             .addSlider(slider => {
                 slider.setLimits(1, 30, 1)
                     .setValue(this.plugin.settings.deadlineRecurrenceValue ?? DEFAULT_RECURRENCE)
@@ -407,7 +407,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
         let warningSliderSetting: Setting;
         warningSliderSetting = new Setting(deadlineItems)
             .setName('Advanced warning time')
-            .setDesc('Set when a warning is given before the deadline ends (1 - 24 hours)')
+            .setDesc('Set how early the warning is given (1 - 24 hours)')
             .addSlider(slider => {
                 slider.setLimits(1, 24, 1)
                     .setValue(this.plugin.settings.deadlineWarningValue ?? DEFAULT_WARNING)
@@ -450,12 +450,12 @@ class DeadlineSettingsTab extends PluginSettingTab {
                         }
                         // In case a title is not set
                         if (!title) {
-                            new Notice("Please set a valid title.");
+                            new Notice("Please set a valid title");
                             return;
                         }
                         // In case date/time is reset
                         if (!dateTime) {
-                            new Notice("Please set a date and time for the deadline.");
+                            new Notice("Please set a valid date and time");
                             return;
                         }
                         // Initialize deadlines array if needed
@@ -470,7 +470,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                         });
                         // Reset deadling settings
                         this.plugin.settings.deadlineTitle = '';
-                        this.plugin.settings.deadlineDateTime = new Date().toISOString().slice(0, 16);
+                        this.plugin.settings.deadlineDateTime = '';
                         this.plugin.settings.selectedCategory = DEFAULT_CATEGORY;
                         this.plugin.settings.deadlineRecurrenceSet = false;
                         this.plugin.settings.deadlineRecurrenceValue = DEFAULT_RECURRENCE;
@@ -663,9 +663,11 @@ class CategorySuggest extends AbstractInputSuggest<string> {
         this.categories = categories;
     }
     getSuggestions(query: string): string[] {
-        return this.categories.filter(cat =>
-            cat.toLowerCase().includes(query.toLowerCase())
-        );
+        return this.categories
+            .filter(cat =>
+                cat.toLowerCase().includes(query.toLowerCase())
+            )
+            .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
     }
     renderSuggestion(value: string, el: HTMLElement) {
         el.setText(value);
