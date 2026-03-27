@@ -423,7 +423,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
         let textComponent: TextComponent;
         new Setting(deadlineItems)
             .setName('Category')
-            .setDesc('Set a category for the deadline')
+            .setDesc('Set a category for the deadline (optional)')
             .addText(text => {
                 textComponent = text;
                 text.setPlaceholder('Enter a category');
