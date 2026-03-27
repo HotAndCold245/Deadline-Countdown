@@ -90,7 +90,7 @@
   --grotto-light-5: hsl(33, 33%, 90%);
   color: var(--grotto-light-5);
   background-color: var(--text-error);
-  border: 1px solid var(--text-normal);
+  outline: 1px solid var(--text-normal);
   border-radius: 0rem;
   padding: 4px;
 }
