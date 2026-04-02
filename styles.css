@@ -88,7 +88,7 @@
 /* Deadline container when warning status is active */
 .grotto-deadline-card.grotto-deadline-warning {
   --grotto-light-5: hsl(33, 33%, 90%);
-  color: var(--grotto-light-5);
+  color: var(--grotto-light-0, --grotto-light-5);
   background-color: var(--text-error);
   outline: 1px solid var(--text-normal);
   border-radius: 0rem;
@@ -96,8 +96,8 @@
 }
 .grotto-deadline-card.grotto-deadline-warning .grotto-deadline-title {
   --grotto-light-5: hsl(33, 33%, 90%);
-  color: var(--grotto-light-5);
-  text-decoration: underline solid var(--grotto-light-5);
+  color: var(--grotto-light-0, --grotto-light-5);
+  text-decoration: underline solid var(--grotto-light-0, --grotto-light-5);
 }
 .grotto-deadline-card.grotto-deadline-warning .grotto-deadline-label, 
 .grotto-deadline-card.grotto-deadline-warning .grotto-deadline-interval, 
@@ -105,7 +105,7 @@
 .grotto-deadline-card.grotto-deadline-warning .grotto-deadline-resets, 
 .grotto-deadline-card.grotto-deadline-warning .grotto-deadline-ends {
   --grotto-light-5: hsl(33, 33%, 90%);
-  color: var(--grotto-light-5);
+  color: var(--grotto-light-0, --grotto-light-5);
 }
 /* Deadline standard texts */
 .grotto-deadline-label {
@@ -142,7 +142,6 @@
 .grotto-deadline-categories.grotto-collapsed {
     display: none;
 }
-
 .grotto-deadline-actions-sidebar {
   display: flex;
   flex-direction: row;
@@ -152,5 +151,5 @@
 .clickable-icon.grotto-deadline-delete-right, 
 .is-mobile .clickable-icon.grotto-deadline-delete-right {
   --grotto-light-5: hsl(33, 33%, 90%);
-  color: var(--grotto-light-5);
+  color: var(--grotto-light-0, --grotto-light-5);
 }
