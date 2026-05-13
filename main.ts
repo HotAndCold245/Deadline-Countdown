@@ -581,7 +581,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                 };
                 // Initial call and interval
                 updateRemainingTime();
-                activeWindow.setInterval(updateRemainingTime, 10000);
+                window.setInterval(updateRemainingTime, 10000);
                 // Actions
                 const actionsContainer = dlEl.createDiv({ cls: 'grotto-deadline-actions' });
                 const movementContainer = actionsContainer.createDiv({ cls: 'grotto-deadline-move-actions' });
