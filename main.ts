@@ -118,8 +118,7 @@ export class GrottoSidebarView extends ItemView {
         return DEADLINE_VIEW;
     }
     getDisplayText() {
-        // Revert this back from sentence case if the plugin gets approved
-        return "Deadline countdown";
+        return "Deadline Countdown";
     }
     getIcon(): string {
         return "deadline-preset-icon";
@@ -153,7 +152,7 @@ export class GrottoSidebarView extends ItemView {
         const sortedCategories = Object.keys(groupedDeadlines).sort((a, b) => a.localeCompare(b));
         for (const category of sortedCategories) {
             const deadlines = groupedDeadlines[category];
-            const categorySection = container.createEl('div', {
+            const categorySection = container.createDiv({
                 cls: 'grotto-category-section'
             });
             categorySection.setAttribute('data-category', category);
@@ -172,35 +171,35 @@ export class GrottoSidebarView extends ItemView {
                 }
                 await this.plugin.saveSettings();
             };
-            const deadlineList = categorySection.createEl('div', {
+            const deadlineList = categorySection.createDiv({
                 cls: 'grotto-deadline-categories'
             });
             if (this.plugin.settings.collapsedCategories.includes(category)) {
                 deadlineList.addClass('grotto-collapsed');
             }
             deadlines.forEach((dl) => {
-                const dlEl = deadlineList.createEl('div', {
+                const dlEl = deadlineList.createDiv({
                     cls: 'grotto-deadline-card'
                 });
-                const cardContainer = dlEl.createEl('div', {
+                const cardContainer = dlEl.createDiv({
                     cls: 'grotto-deadline-card-container'
                 });
                 // Title
-                const titleEl = cardContainer.createEl('span', {
+                const titleEl = cardContainer.createSpan({
                     text: dl.title,
                     cls: 'grotto-deadline-title'
                 });
                 titleEl.setText(dl.title);
                 // Deadline Date
-                const dateEl = cardContainer.createEl('div', {
+                const dateEl = cardContainer.createDiv({
                     cls: 'grotto-deadline-date'
                 });
                 const deadlineDate = new Date(dl.dateTime);
-                dateEl.createEl('span', {
+                dateEl.createSpan({
                     text: 'Deadline',
                     cls: 'grotto-deadline-label'
                 });
-                dateEl.createEl('span', {
+                dateEl.createSpan({
                     text: ': ' + deadlineDate.toLocaleString('en-GB', {
                         hour: 'numeric',
                         minute: 'numeric',
@@ -219,13 +218,13 @@ export class GrottoSidebarView extends ItemView {
                 if (isUrgent) {
                     dlEl.addClass('grotto-deadline-warning');
                 }
-                const remainingTimeEl = cardContainer.createEl('div', {
+                const remainingTimeEl = cardContainer.createDiv({
                     cls: 'grotto-deadline-remaining'
                 });
                 this.updateRemainingTime(dl, remainingTimeEl);
                 const status = calculateRemaining(dl);
                 if (status.label === "Deadline passed") {
-                    const deleteButton = dlEl.createEl('span', {
+                    const deleteButton = dlEl.createSpan({
                         cls: 'clickable-icon grotto-deadline-delete-right'
                     });
                     setIcon(deleteButton, 'trash');
@@ -255,7 +254,7 @@ export class GrottoSidebarView extends ItemView {
     // Function to update the remaining time for each deadline
     updateRemainingTime(deadline: Deadline, remainingTimeEl: HTMLElement) {
         const remainingLabelEl = remainingTimeEl.createEl('span');
-        const remainingValueEl = remainingTimeEl.createEl('span', {
+        const remainingValueEl = remainingTimeEl.createSpan({
             cls: 'grotto-deadline-time-value'
         });
         const update = () => {
@@ -308,16 +307,16 @@ class DeadlineSettingsTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
         // Deadline Controls
-        const newDeadline = containerEl.createEl('div', { cls: 'setting-group' });
+        const newDeadline = containerEl.createDiv({ cls: 'setting-group' });
         newDeadline
-            .createEl('div', {
+            .createDiv({
                 cls: 'setting-item setting-item-heading'
             })
-            .createEl('div', {
+            .createDiv({
                 text: 'Deadline controls',
                 cls: 'setting-item-name'
             });
-        const deadlineItems = newDeadline.createEl('div', {
+        const deadlineItems = newDeadline.createDiv({
             cls: 'setting-items'
         });
         // Title
@@ -484,38 +483,38 @@ class DeadlineSettingsTab extends PluginSettingTab {
                     });
             });
         // Deadline Management section
-        const managesDeadline = containerEl.createEl('div', { cls: 'setting-group' });
+        const managesDeadline = containerEl.createDiv({ cls: 'setting-group' });
         managesDeadline
-            .createEl('div', { cls: 'setting-item setting-item-heading' })
-            .createEl('div', { text: 'Deadline management', cls: 'setting-item-name' });
-        const manageDeadlineItems = managesDeadline.createEl('div', { cls: 'setting-items' });
+            .createDiv({ cls: 'setting-item setting-item-heading' })
+            .createDiv({ text: 'Deadline management', cls: 'setting-item-name' });
+        const manageDeadlineItems = managesDeadline.createDiv({ cls: 'setting-items' });
         const sortedCategories = this.plugin.settings.categories
             .slice()
             .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         sortedCategories.forEach(category => {
-            const categoryContainer = manageDeadlineItems.createEl('div', { cls: 'grotto-category-container' });
+            const categoryContainer = manageDeadlineItems.createDiv({ cls: 'grotto-category-container' });
             // Category header
-            categoryContainer.createEl('div', {
+            categoryContainer.createDiv({
                 text: category,
                 cls: 'grotto-category-header'
             });
             // Deadlines in categories
-            const deadlinesContainer = categoryContainer.createEl('div', { cls: 'grotto-deadlines-container' });
+            const deadlinesContainer = categoryContainer.createDiv({ cls: 'grotto-deadlines-container' });
             const categoryDeadlines = (this.plugin.settings.deadlines || []).filter(dl => dl.category === category);
             categoryDeadlines.forEach(dl => {
-                const dlEl = deadlinesContainer.createEl('div', { cls: 'grotto-deadline-card' });
-                const cardContainer = dlEl.createEl('div', { cls: 'grotto-deadline-card-container' });
+                const dlEl = deadlinesContainer.createDiv({ cls: 'grotto-deadline-card' });
+                const cardContainer = dlEl.createDiv({ cls: 'grotto-deadline-card-container' });
                 // Title
-                const titleEl = cardContainer.createEl('span', { text: dl.title, cls: 'grotto-deadline-title' });
+                const titleEl = cardContainer.createSpan({ text: dl.title, cls: 'grotto-deadline-title' });
                 titleEl.setText(dl.title);
                 // Deadline Date
-                const dateEl = cardContainer.createEl('div', { cls: 'grotto-deadline-date' });
+                const dateEl = cardContainer.createDiv({ cls: 'grotto-deadline-date' });
                 const deadlineDate = new Date(dl.dateTime);
-                dateEl.createEl('span', {
+                dateEl.createSpan({
                     text: 'Deadline',
                     cls: 'grotto-deadline-label'
                 });
-                dateEl.createEl('span', {
+                dateEl.createSpan({
                     text: ': ' + deadlineDate.toLocaleString('en-GB', {
                         hour: 'numeric',
                         minute: 'numeric',
@@ -527,33 +526,33 @@ class DeadlineSettingsTab extends PluginSettingTab {
                     cls: 'grotto-deadline-date-value'
                 });
                 // Interval
-                const intervalTimeEl = cardContainer.createEl('div', { cls: 'grotto-deadline-interval' });
+                const intervalTimeEl = cardContainer.createDiv({ cls: 'grotto-deadline-interval' });
                 if (dl.recurrence > 0) {
-                    intervalTimeEl.createEl('span', {
+                    intervalTimeEl.createSpan({
                         text: 'Interval',
                         cls: 'grotto-deadline-label'
                     });
-                    intervalTimeEl.createEl('span', {
+                    intervalTimeEl.createSpan({
                         text: `: Every ${dl.recurrence} day${dl.recurrence > 1 ? 's' : ''}`,
                         cls: 'grotto-deadline-interval-value'
                     });
                 }
                 // Warning
-                const warningTimeEl = cardContainer.createEl('div', { cls: 'grotto-deadline-warning-time' });
+                const warningTimeEl = cardContainer.createDiv({ cls: 'grotto-deadline-warning-time' });
                 if (dl.warning > 0) {
-                    warningTimeEl.createEl('span', {
+                    warningTimeEl.createSpan({
                         text: 'Warning',
                         cls: 'grotto-deadline-label'
                     });
-                    warningTimeEl.createEl('span', {
+                    warningTimeEl.createSpan({
                         text: `: ${dl.warning} hour${dl.warning > 1 ? 's' : ''} in advance`,
                         cls: 'grotto-deadline-warning-value'
                     });
                 }
                 // Remaining Time
-                const remainingTimeEl = cardContainer.createEl('div', { cls: 'grotto-deadline-remaining' });
+                const remainingTimeEl = cardContainer.createDiv({ cls: 'grotto-deadline-remaining' });
                 const remainingLabelEl = remainingTimeEl.createEl('span');
-                const remainingValueEl = remainingTimeEl.createEl('span', { cls: 'grotto-deadline-time-value' });
+                const remainingValueEl = remainingTimeEl.createSpan({ cls: 'grotto-deadline-time-value' });
                 const updateRemainingTime = () => {
                     remainingLabelEl.setText('');
                     remainingValueEl.setText('');
@@ -582,13 +581,13 @@ class DeadlineSettingsTab extends PluginSettingTab {
                 };
                 // Initial call and interval
                 updateRemainingTime();
-                setInterval(updateRemainingTime, 10000);
+                activeWindow.setInterval(updateRemainingTime, 10000);
                 // Actions
-                const actionsContainer = dlEl.createEl('div', { cls: 'grotto-deadline-actions' });
-                const movementContainer = actionsContainer.createEl('div', { cls: 'grotto-deadline-move-actions' });
+                const actionsContainer = dlEl.createDiv({ cls: 'grotto-deadline-actions' });
+                const movementContainer = actionsContainer.createDiv({ cls: 'grotto-deadline-move-actions' });
                 const deadlineItems = this.plugin.settings.deadlines;
                 // Move Up
-                const moveUp = movementContainer.createEl('span', {
+                const moveUp = movementContainer.createSpan({
                     cls: 'clickable-icon'
                 });
                 setIcon(moveUp, 'chevron-up');
@@ -606,7 +605,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                     }
                 };
                 // Move Down 
-                const moveDown = movementContainer.createEl('span', {
+                const moveDown = movementContainer.createSpan({
                     cls: 'clickable-icon'
                 });
                 setIcon(moveDown, 'chevron-down');
@@ -624,7 +623,7 @@ class DeadlineSettingsTab extends PluginSettingTab {
                     }
                 };
                 // Delete
-                const deadlineDelete = actionsContainer.createEl('span', {
+                const deadlineDelete = actionsContainer.createSpan({
                     cls: 'clickable-icon'
                 });
                 setIcon(deadlineDelete, 'trash');
